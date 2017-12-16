@@ -230,8 +230,8 @@ class WaterWorld(PyGameWrapper):
 
         self.score += self.rewards["tick"]
 
-        # self._handle_player_events()
-        self.ai_move()
+        # self._handle_player_events() #player movement
+        self.ai_move() # ai movement
         self.player.update(self.dx, self.dy, dt)
 
         hits = pygame.sprite.spritecollide(self.player, self.creeps, True)
@@ -257,12 +257,11 @@ if __name__ == "__main__":
     game.clock = pygame.time.Clock()
     game.rng = np.random.RandomState(24)
     game.init()
-    myfont = pygame.font.SysFont('Comic Sans MS', 30)
+    myfont = pygame.font.SysFont('Comic Sans MS', 15)
 
-    game.screen.blit(textsurface, (0, 0))
     while True and game.creep_counts['GOOD']:
         dt = game.clock.tick_busy_loop(30)
         game.step(dt)
-        pygame.display.update()
         textsurface = myfont.render(str(game.score), True, (0, 0, 0))
-        screen.blit(textsurface,(0,0))
+        game.screen.blit(textsurface, (0, 0))
+        pygame.display.update()
