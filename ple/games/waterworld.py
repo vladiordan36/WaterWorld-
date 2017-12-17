@@ -31,6 +31,7 @@ class WaterWorld(PyGameWrapper):
         The number of creeps on the screen at once.
     """
 
+
     def __init__(self,
                  width=48,
                  height=48,
@@ -68,6 +69,16 @@ class WaterWorld(PyGameWrapper):
         self.dy = 0
         self.player = None
         self.creeps = None
+
+        self.reward = 0
+        self.old_score = 0
+        self.learning_rate = 0.2
+        self.discount = 0.9
+        self.epsilon = 0.9
+        self.q = {}
+        self.old_q = 0
+        self.old_x = self.width / 2
+        self.old_y = self.height / 2
 
     def _handle_player_events(self):
         self.dx = 0
@@ -161,6 +172,34 @@ class WaterWorld(PyGameWrapper):
 
         return state
 
+    def generate_q(self):
+        q = {}
+        for x in range(0,self.width):
+            for y in range(0,self.height):
+                for a in self.actions:
+                    q[x, y, a] = random.random()
+
+        return q
+
+    def get_max_future_q(self):
+        max = 0
+        for action in self.actions:
+            value = self.q[math.floor(self.player.pos.x), math.floor(self.player.pos.y), action]
+            if value > max:
+                max = value
+        return max
+
+
+    def compute_q(self, action):
+        if self.old_score < self.score:
+            reward = 1
+        else:
+            reward = -1
+
+        self.old_q = self.q[math.floor(self.old_x), math.floor(self.old.y), action]
+        self.q[math.floor(self.old_x), math.floor(self.old.y), action] = math.floor(self.old_q) + self.learning_rate * (self.reward + self.discount * self.get_max_future_q() - self.q[math.floor(self.old_x), math.floor(self.old.y), action])
+
+
     def getScore(self):
         return self.score
 
@@ -207,7 +246,10 @@ class WaterWorld(PyGameWrapper):
                 pygame.quit()
                 sys.exit()
 
-        key = random.choice(list(self.actions.values()))
+        if random.random() > self.epsilon:
+            key = random.choice(list(self.actions.values()))
+        else:
+            key = self.get_max_future_q()
 
         if key == self.actions["left"]:
             self.dx -= self.AGENT_SPEED
@@ -253,13 +295,15 @@ if __name__ == "__main__":
 
     pygame.init()
     game = WaterWorld(width=256, height=256, num_creeps=10)
+    game.q = game.generate_q()
     game.screen = pygame.display.set_mode(game.getScreenDims(), 0, 32)
     game.clock = pygame.time.Clock()
     game.rng = np.random.RandomState(24)
     game.init()
     myfont = pygame.font.SysFont('Comic Sans MS', 15)
+    print(game.generate_q())
 
-    while True and game.creep_counts['GOOD']:
+    while not game.game_over():
         dt = game.clock.tick_busy_loop(30)
         game.step(dt)
         textsurface = myfont.render(str(game.score), True, (0, 0, 0))
