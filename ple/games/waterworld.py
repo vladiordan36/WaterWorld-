@@ -192,9 +192,9 @@ class WaterWorld(PyGameWrapper):
 
     def compute_q(self, action):
         if self.old_score < self.score:
-            reward = 1
+            self.reward = 1
         else:
-            reward = -1
+            self.reward = -1
 
         self.old_q = self.q[math.floor(self.old_x), math.floor(self.old.y), action]
         self.q[math.floor(self.old_x), math.floor(self.old.y), action] = math.floor(self.old_q) + self.learning_rate * (self.reward + self.discount * self.get_max_future_q() - self.q[math.floor(self.old_x), math.floor(self.old.y), action])
