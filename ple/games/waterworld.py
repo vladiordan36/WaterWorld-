@@ -192,12 +192,12 @@ class WaterWorld(PyGameWrapper):
 
     def compute_q(self, action):
         if self.old_score < self.score:
-            reward = 1
+            self.reward = 1
         else:
-            reward = -1
+            self.reward = -1
 
-        self.old_q = self.q[math.floor(self.old_x), math.floor(self.old.y), action]
-        self.q[math.floor(self.old_x), math.floor(self.old.y), action] = math.floor(self.old_q) + self.learning_rate * (self.reward + self.discount * self.get_max_future_q() - self.q[math.floor(self.old_x), math.floor(self.old.y), action])
+        self.old_q = self.q[math.floor(self.old_x), math.floor(self.old_y), action]
+        self.q[math.floor(self.old_x), math.floor(self.old_y), action] = math.floor(self.old_q) + self.learning_rate * (self.reward + self.discount * self.get_max_future_q() - self.q[math.floor(self.old_x), math.floor(self.old_y), action])
 
 
     def getScore(self):
@@ -253,15 +253,21 @@ class WaterWorld(PyGameWrapper):
 
         if key == self.actions["left"]:
             self.dx -= self.AGENT_SPEED
+            self.compute_q("left")
 
         if key == self.actions["right"]:
             self.dx += self.AGENT_SPEED
+            self.compute_q("right")
 
         if key == self.actions["up"]:
             self.dy -= self.AGENT_SPEED
+            self.compute_q("up")
 
         if key == self.actions["down"]:
             self.dy += self.AGENT_SPEED
+            self.compute_q("down")
+
+
 
     def step(self, dt):
         """
@@ -301,7 +307,7 @@ if __name__ == "__main__":
     game.rng = np.random.RandomState(24)
     game.init()
     myfont = pygame.font.SysFont('Comic Sans MS', 15)
-    print(game.generate_q())
+
 
     while not game.game_over():
         dt = game.clock.tick_busy_loop(30)
@@ -309,3 +315,4 @@ if __name__ == "__main__":
         textsurface = myfont.render(str(game.score), True, (0, 0, 0))
         game.screen.blit(textsurface, (0, 0))
         pygame.display.update()
+        print(game.old_q)
